@@ -115,13 +115,14 @@ int parse_nal(int argc, char ** argv)
     std::cout << "NAL unit count = " << nalCount << std::endl;
 
     fclose(input);
+    return 0;
 }
 
 void parser(BlockingQueue<int> & queue)
 {
     for(int i = 0; i < 10; ++i)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         queue.push(i);
     }
     queue.close();
@@ -132,7 +133,7 @@ void worker(BlockingQueue<int> & input, BlockingQueue<int> & output)
     int task;
     while(input.pop(task))
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200 + (task % 2) * 200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200 + (task % 2) * 300));
         output.push(task);
     }
 }
@@ -142,17 +143,25 @@ int main(int argc, char ** argv)
     BlockingQueue<int> queue;
     BlockingQueue<int> output;
     std::thread parserThread(parser, std::ref(queue));
-    std::thread workerThread(worker, std::ref(queue), std::ref(output));
-    std::thread workerThread2(worker, std::ref(queue), std::ref(output));
 
+    int threadCount = 2;
+    std::vector<std::thread> workers;
+    for(int i = 0; i < threadCount; ++i) {
+        workers.push_back(std::thread(worker, std::ref(queue), std::ref(output)));
+    }
+
+    int count = 10;
     int task;
-    while(output.pop(task))
+    while(count > 0 && output.pop(task))
     {
         std::cout << task << std::endl;
+        --count;
     }
 
     parserThread.join();
-    workerThread.join();
-    workerThread2.join();
+    for(auto & worker : workers)
+    {
+        worker.join();
+    }
     return 0;
 }

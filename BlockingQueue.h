@@ -40,7 +40,7 @@ public:
 
 private:
     std::queue<T> queue;
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::condition_variable condition;
     bool closed = false;
 };
