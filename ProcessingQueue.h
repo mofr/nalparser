@@ -66,6 +66,9 @@ private:
         }
     }
 
+    /**
+     * @todo Simplify, remove ugly out2
+     */
     void collect(Index index, Out & out)
     {
         std::unique_lock<std::mutex> lock(outputMutex);
@@ -73,28 +76,33 @@ private:
         {
             output(out);
             ++outputIndex;
-            bool found;
-            do
-            {
-                found = false;
-                for(auto out2 = std::begin(outputList); out2 != std::end(outputList); ++out2)
-                {
-                    if(outputIndex == out2->first)
-                    {
-                        output(out2->second);
-                        outputList.erase(out2);
-                        ++outputIndex;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            while(found);
+            purgeOutputList();
         }
         else
         {
             outputList.push_back(std::make_pair(index, out));
         }
+    }
+
+    void purgeOutputList()
+    {
+        bool found;
+        do
+        {
+            found = false;
+            for(auto out = begin(outputList); out != end(outputList); ++out)
+            {
+                if(outputIndex == out->first)
+                {
+                    output(out->second);
+                    outputList.erase(out);
+                    ++outputIndex;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        while(found);
     }
 
 private:
@@ -103,6 +111,8 @@ private:
 
     std::mutex outputMutex;
     Index outputIndex = 0;
+
+    //unsorted list of output data
     std::list<std::pair<Index, Out>> outputList;
 
     ProcessFunction process;

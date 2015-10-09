@@ -1,6 +1,7 @@
 #include <iostream>
+#include "NalReader.h"
 #include "ProcessingQueue.h"
-//
+
 //const char* nal_types[] = {"TRAIL_N",
 //"TRAIL_R",
 //"TSA_N",
@@ -117,38 +118,42 @@
 //    return 0;
 //}
 
-struct BinaryNalUnit
-{
-    int i;
-};
-
 struct NalUnit
 {
-    int i;
+    int type;
     int elapsedMillis;
 };
 
-class NalReader
-{
-public:
-    NalReader(const char * filename) { }
 
-    bool readNext(BinaryNalUnit & unit)
-    {
-        unit.i = i;
-        ++i;
-        return i <= 10;
-    }
-
-private:
-    int i = 0;
-};
-
-
+/**
+ * @todo Parse xml config
+ */
 int main(int argc, char ** argv)
 {
+    if(argc < 2)
+    {
+        std::cerr << "Usage: executable FILENAME [THREADS]" << std::endl;
+        return 1;
+    }
+
     const char * filename = argv[1];
-    int threadCount = 2;
+
+    int threadCount;
+    if(argc > 2)
+    {
+        threadCount = strtol(argv[2], nullptr, 10);
+        if(threadCount <= 0)
+        {
+            std::cerr << "Invalid thread count: " << argv[2] << std::endl;
+            return 2;
+        }
+    }
+    else
+    {
+        threadCount = std::thread::hardware_concurrency();
+    }
+
+    std::cout << "Thread count: " << threadCount << std::endl;
 
     NalReader reader(filename);
 
@@ -157,13 +162,13 @@ int main(int argc, char ** argv)
     };
 
     auto processFunction = [](const BinaryNalUnit & binaryNalUnit, NalUnit & nalUnit) {
-        nalUnit.i = binaryNalUnit.i * 2;
-        nalUnit.elapsedMillis = 200 + (binaryNalUnit.i % 2) * 300;
+        nalUnit.type = binaryNalUnit.fakeData * 2;
+        nalUnit.elapsedMillis = 400 + (binaryNalUnit.fakeData % 2) * 400;
         std::this_thread::sleep_for(std::chrono::milliseconds(nalUnit.elapsedMillis));
     };
 
     auto outputFunction = [](const NalUnit & nalUnit) {
-        std::cout << nalUnit.i << " " << nalUnit.elapsedMillis << " ms" << std::endl;
+        std::cout << nalUnit.type << " " << nalUnit.elapsedMillis << " ms" << std::endl;
     };
 
     ProcessingQueue<BinaryNalUnit, NalUnit> processingQueue;
