@@ -30,7 +30,7 @@ public:
 
         for(int i = 0; i < threadCount; ++i)
         {
-            workers.push_back(std::thread(&ProcessingQueue::worker, this));
+            workers.emplace_back(&ProcessingQueue::worker, this);
         }
 
         this->process = process;
@@ -66,9 +66,6 @@ private:
         }
     }
 
-    /**
-     * @todo Simplify, remove ugly out2
-     */
     void collect(Index index, Out & out)
     {
         std::unique_lock<std::mutex> lock(outputMutex);

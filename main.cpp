@@ -1,6 +1,6 @@
 #include <iostream>
-#include "NalReader.h"
-#include "ProcessingQueue.h"
+#include "Arguments.h"
+#include "BlockingQueue.h"
 
 //const char* nal_types[] = {"TRAIL_N",
 //"TRAIL_R",
@@ -51,21 +51,6 @@
 //
 //int parse_nal(int argc, char ** argv)
 //{
-//    if(argc < 2)
-//    {
-//        std::cout << "Usage: executable <filename>" << std::endl;
-//        return 1;
-//    }
-//
-//    char * filename = argv[1];
-//
-//    FILE * input = fopen(filename, "rb");
-//    if(!input)
-//    {
-//        std::cout << "Can't open file '" << filename << "'" << std::endl;
-//        return 2;
-//    }
-//
 //    int nalCount = 0;
 //    static const int BUFFER_SIZE = 1024*8;
 //    char buf[BUFFER_SIZE];
@@ -118,62 +103,176 @@
 //    return 0;
 //}
 
-struct NalUnit
+
+//void variant1()
+//{
+//    NalReader reader(filename);
+//
+//    struct NalUnit
+//    {
+//        int type;
+//        int elapsedMillis;
+//    };
+//
+//    auto inputFunction = [&reader](BinaryNalUnit & binaryNalUnit) {
+//        return reader.readNext(binaryNalUnit);
+//    };
+//
+//    auto processFunction = [](const BinaryNalUnit & binaryNalUnit, NalUnit & nalUnit) {
+//        nalUnit.type = binaryNalUnit.fakeData * 2;
+//        nalUnit.elapsedMillis = 400 + (binaryNalUnit.fakeData % 2) * 400;
+//        std::this_thread::sleep_for(std::chrono::milliseconds(nalUnit.elapsedMillis));
+//    };
+//
+//    auto outputFunction = [](const NalUnit & nalUnit) {
+//        std::cout << nalUnit.type << " " << nalUnit.elapsedMillis << " ms" << std::endl;
+//    };
+//
+//    ProcessingQueue<BinaryNalUnit, NalUnit> processingQueue;
+//    processingQueue.start(threadCount, inputFunction, processFunction, outputFunction);
+//    processingQueue.waitForFinished();
+//}
+
+struct Chunk
 {
-    int type;
-    int elapsedMillis;
+    long offset = 0;
+    long size = 0;
+    char * data = nullptr;
+    Chunk * next = nullptr;
+
+
+    Chunk(long size) : size(size)
+    {
+        data = new char[size];
+    }
+
+    ~Chunk()
+    {
+        delete[] data;
+    }
+
+    const std::vector<long> & getStartCodePrefixes()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if(!parsed)
+        {
+            // @todo find startCodePrefixPositions in data
+        }
+
+        return startCodePrefixPositions;
+    }
+
+private:
+    std::mutex mutex;// @todo read-write lock
+    bool parsed = false;
+    std::vector<long> startCodePrefixPositions;
 };
 
+class ChunkReader
+{
+public:
+    ChunkReader()
+    { }
+
+    ~ChunkReader()
+    {
+        if(file)
+        {
+            fclose(file);
+        }
+    }
+
+    bool open(const char * filename)
+    {
+        file = fopen(filename, "rb");
+        return file != nullptr;
+    }
+
+    Chunk * readNext()
+    {
+        if(feof(file))
+        {
+            if(previous)
+            {
+                Chunk * chunk = previous;
+                previous = nullptr;
+                return chunk;
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
+        if(!previous)
+        {
+            previous = readChunk();
+        }
+
+        Chunk * chunk = previous;
+        chunk->next = readChunk();
+        previous = chunk->next;
+        return chunk;
+    }
+
+private:
+    Chunk * readChunk()
+    {
+        // @todo chunk pool
+        Chunk * chunk = new Chunk(ChunkSize);
+        chunk->size = fread(chunk->data, 1, ChunkSize, file);
+        chunk->offset = offset;
+        offset += chunk->size;
+        return chunk;
+    }
+
+private:
+    FILE * file = nullptr;
+    long offset = 0;
+    Chunk * previous = nullptr;
+
+    static const int ChunkSize = 1024*1024;
+};
+
+void chunkParser(BlockingQueue<Chunk*> & chunkQueue)
+{
+    Chunk * chunk;
+    while(chunkQueue.pop(chunk))
+    {
+        std::cout << chunk->offset << " " << chunk->next << std::endl;
+        // @todo parse chunk + chunk->next
+        // @todo output to collector
+
+        delete chunk;
+    }
+}
 
 /**
- * @todo Parse xml config
+ * @todo parse xml config
  */
 int main(int argc, char ** argv)
 {
-    if(argc < 2)
+    Arguments args(argc, argv);
+    std::cout << "Thread count: " << args.threadCount << std::endl;
+
+    ChunkReader reader;
+    if(!reader.open(args.filename))
     {
-        std::cerr << "Usage: executable FILENAME [THREADS]" << std::endl;
+        std::cerr << "Can't open file " << args.filename << std::endl;
         return 1;
     }
 
-    const char * filename = argv[1];
+    BlockingQueue<Chunk*> chunkQueue(args.threadCount * 2);
 
-    int threadCount;
-    if(argc > 2)
+    std::thread thread(chunkParser, std::ref(chunkQueue));
+
+    while(Chunk * chunk = reader.readNext())
     {
-        threadCount = strtol(argv[2], nullptr, 10);
-        if(threadCount <= 0)
-        {
-            std::cerr << "Invalid thread count: " << argv[2] << std::endl;
-            return 2;
-        }
+        chunkQueue.push(chunk);
     }
-    else
-    {
-        threadCount = std::thread::hardware_concurrency();
-    }
+    chunkQueue.close();
 
-    std::cout << "Thread count: " << threadCount << std::endl;
-
-    NalReader reader(filename);
-
-    auto inputFunction = [&reader](BinaryNalUnit & binaryNalUnit) {
-        return reader.readNext(binaryNalUnit);
-    };
-
-    auto processFunction = [](const BinaryNalUnit & binaryNalUnit, NalUnit & nalUnit) {
-        nalUnit.type = binaryNalUnit.fakeData * 2;
-        nalUnit.elapsedMillis = 400 + (binaryNalUnit.fakeData % 2) * 400;
-        std::this_thread::sleep_for(std::chrono::milliseconds(nalUnit.elapsedMillis));
-    };
-
-    auto outputFunction = [](const NalUnit & nalUnit) {
-        std::cout << nalUnit.type << " " << nalUnit.elapsedMillis << " ms" << std::endl;
-    };
-
-    ProcessingQueue<BinaryNalUnit, NalUnit> processingQueue;
-    processingQueue.start(threadCount, inputFunction, processFunction, outputFunction);
-    processingQueue.waitForFinished();
+    thread.join();
 
     return 0;
 }
