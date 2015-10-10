@@ -4,6 +4,6 @@ project(nal_parser)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCES main.cpp BlockingQueue.h ProcessingQueue.h NalReader.h Arguments.h)
+set(SOURCES main.cpp BlockingQueue.h ProcessingQueue.h Arguments.h Chunk.h ChunkReader.h NalParser.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
