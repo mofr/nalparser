@@ -44,7 +44,7 @@ struct Chunk
     }
 
 private:
-    // @todo also find splitted prefixes
+    // @todo find splitted prefixes
     void findStartCodePrefixes()
     {
         int matchCount = 0;
@@ -62,8 +62,6 @@ private:
                 if(matchCount == 4)
                 {
                     startCodePrefixes.push_back(i);
-//                    int nalType = (data[i] & 0x01111110) >> 1;
-//                    nalUnits.emplace_back(offset + i - 3, nalType);
                 }
                 matchCount = 0;
             }

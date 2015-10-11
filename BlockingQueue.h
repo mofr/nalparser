@@ -51,6 +51,12 @@ public:
         popCondition.notify_all();
     }
 
+    int size() const
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        return queue.size();
+    }
+
     void setMaxSize(int size)
     {
         std::unique_lock<std::mutex> lock(mutex);

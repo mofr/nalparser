@@ -65,8 +65,10 @@ const char * nalTypeAsString(int type)
 struct NalUnit
 {
     long offset;
+    long size;
     int type;
+    bool first;
 
-    NalUnit(long offset, int type) : offset(offset), type(type)
+    NalUnit(long offset, long size, int type, bool first) : offset(offset), type(type), size(size), first(first)
     { }
 };
