@@ -1,5 +1,7 @@
 #pragma once
 
+#include "NalParser.h"
+
 struct Chunk
 {
     long offset = 0;
@@ -50,19 +52,20 @@ private:
         int matchCount = 0;
         for(long i = 0; i < size; ++i)
         {
-            if((matchCount == 0 && data[i] == 0x00) ||
-               (matchCount == 1 && data[i] == 0x00) ||
-               (matchCount == 2 && data[i] == 0x00) ||
-               (matchCount == 3 && data[i] == 0x01))
+            if(matchCount < StartCodePrefixLength)
             {
-                ++matchCount;
+                if(data[i] == StartCodePrefix[matchCount])
+                {
+                    ++matchCount;
+                }
+                else
+                {
+                    matchCount = 0;
+                }
             }
             else
             {
-                if(matchCount == 4)
-                {
-                    startCodePrefixes.push_back(i);
-                }
+                startCodePrefixes.push_back(i);
                 matchCount = 0;
             }
         }

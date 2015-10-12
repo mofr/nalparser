@@ -1,5 +1,8 @@
 #pragma once
 
+static unsigned char StartCodePrefix[] = {0x00, 0x00, 0x00, 0x01};
+static const int StartCodePrefixLength = 4;
+
 const char* nalTypes[] = {
         "TRAIL_N",
         "TRAIL_R",

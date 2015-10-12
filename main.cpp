@@ -23,7 +23,7 @@ void collect(NalUnit nalUnit)
         std::cout << " size=" << nalUnit.size;
         std::cout << std::endl;
 
-        waitingOffset = nalUnit.offset + nalUnit.size + 4;
+        waitingOffset = nalUnit.offset + nalUnit.size + StartCodePrefixLength;
         ++nalUnitCount;
     };
 
@@ -92,7 +92,7 @@ void parseChunks(BlockingQueue<std::shared_ptr<Chunk>> &chunkQueue)
         for(int i = 0; i < startCodePrefixes.size() - 1; ++i)
         {
             long offset = startCodePrefixes[i];
-            long size = startCodePrefixes[i+1] - offset - 4;
+            long size = startCodePrefixes[i+1] - offset - StartCodePrefixLength;
             bool first = chunk->offset == 0 && i == 0;
             unsigned char firstByte;
             if(chunk->size > offset-chunk->offset)
