@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
     }
 
     NalParser nalParser(args.threadCount);
-    nalParser.setCallback([&](int index, const NalUnit & nalUnit){
+    nalParser.setCallback([](int index, const NalUnit & nalUnit){
         std::cout << index << ": " << nalTypeAsString(nalUnit.type);
         std::cout << " offset=" << nalUnit.offset;
         std::cout << " size=" << nalUnit.size;
@@ -34,10 +34,10 @@ int main(int argc, char ** argv)
     // @todo config from xmlDocument
     for(auto & task : configFile.getRoot().children)
     {
-        task.print(std::cout);
+        task.print();
     }
 
-    while(std::shared_ptr<Chunk> chunk = reader.readNext())
+    while(auto chunk = reader.readNext())
     {
         nalParser.parse(chunk);
     }

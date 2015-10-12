@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "NalUnit.h"
 
 Chunk::Chunk(long size) :
         size(size),

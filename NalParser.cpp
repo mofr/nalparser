@@ -104,18 +104,13 @@ void NalParser::parseChunks(NalParser & self)
             offset += chunk->offset;
         }
 
-        std::shared_ptr<Chunk> next = chunk->getNext();
-        while(next)
+        for(std::shared_ptr<Chunk> next = chunk->getNext(); next != nullptr; next = next->getNext())
         {
             const std::vector<long> & nextStartCodePrefixes = next->getStartCodePrefixes();
             if(!nextStartCodePrefixes.empty())
             {
                 startCodePrefixes.push_back(nextStartCodePrefixes.front() + next->offset);
                 break;
-            }
-            else
-            {
-                next = next->getNext();
             }
         }
 

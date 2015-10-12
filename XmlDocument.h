@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ostream>
+#include <iostream>
 #include <map>
 #include <vector>
 
@@ -17,7 +17,7 @@ struct XmlNode
     std::vector<XmlNode> children;
     Type type;
 
-    void print(std::ostream & stream, int depth = 0) const;
+    void print(std::ostream & stream = std::cout, int depth = 0) const;
 };
 
 class XmlDocument
@@ -28,7 +28,7 @@ public:
     bool load(const char * filename);
     bool parse(const char * data);
     const char * getLastError() const;
-    void print(std::ostream & stream) const;
+    void print(std::ostream & stream = std::cout) const;
 
     const XmlNode & getRoot() const;
 
