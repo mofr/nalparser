@@ -1,13 +1,14 @@
 #include "Arguments.h"
-#include "XmlDocument.h"
+#include "Configuration.h"
 #include "ChunkReader.h"
 #include "NalParser.h"
 #include <iostream>
+#include <chrono>
 
 int main(int argc, char ** argv)
 {
     Arguments args(argc, argv);
-    std::cout << "Thread count: " << args.threadCount << std::endl;
+    Configuration configuration(args.configFilename);
 
     ChunkReader reader;
     if(!reader.open(args.filename))
@@ -16,34 +17,35 @@ int main(int argc, char ** argv)
         return 1;
     }
 
-    NalParser nalParser(args.threadCount);
-    nalParser.setCallback([](int index, const NalUnit & nalUnit){
+    std::cout << "Thread count: " << args.threadCount << std::endl;
+
+    auto processFunction = [&configuration](const NalUnit & nalUnit){
+        int millis = configuration.getRandomSleepTime(nalUnit.type);
+        std::this_thread::sleep_for(std::chrono::milliseconds(millis));
+        return millis;
+    };
+
+    auto outputFunction = [](int index, const NalUnit & nalUnit){
         std::cout << index << ": " << nalTypeAsString(nalUnit.type);
         std::cout << " offset=" << nalUnit.offset;
         std::cout << " size=" << nalUnit.size;
         std::cout << " " << nalUnit.elapsedMillis << " ms";
         std::cout << std::endl;
-    });
+    };
 
-    XmlDocument configFile;
-    if(!configFile.load(args.configFilename))
-    {
-        std::cerr << "Can't load config file '" << args.configFilename << "': " << configFile.getLastError() << std::endl;
-        return 1;
-    }
-    // @todo config from xmlDocument
-    for(auto & task : configFile.getRoot().children)
-    {
-        task.print();
-    }
+    auto start = std::chrono::system_clock::now();
 
+    NalParser nalParser(args.threadCount, processFunction, outputFunction);
     while(auto chunk = reader.readNext())
     {
         nalParser.parse(chunk);
     }
     nalParser.close();
 
-    std::cout << "Nal unit count: " << nalParser.count() << std::endl;
+    std::cout << "NAL unit count: " << nalParser.count() << std::endl;
+
+    auto elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+    std::cout << "Elapsed: " << elapsedMillis << " ms" << std::endl;
 
     return 0;
 }

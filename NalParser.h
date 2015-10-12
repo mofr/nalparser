@@ -11,12 +11,12 @@
 class NalParser
 {
 public:
-    typedef std::function<void(int index, const NalUnit & nalUnit)> Callback;
+    typedef std::function<int(const NalUnit & nalUnit)> ProcessFunction;
+    typedef std::function<void(int index, const NalUnit & nalUnit)> OutputFunction;
 
-    NalParser(int threadCount);
+    NalParser(int threadCount, ProcessFunction processFunction, OutputFunction outputFunction);
     ~NalParser();
 
-    void setCallback(Callback callback);
     void parse(std::shared_ptr<Chunk> chunk);
     void close();
     int count() const;
@@ -24,13 +24,13 @@ public:
 private:
     void collect(NalUnit nalUnit);
     void output(NalUnit nalUnit);
-    static void parseChunks(NalParser & self);
 
 private:
     BlockingQueue<std::shared_ptr<Chunk>> chunkQueue{100};
     std::vector<std::thread> threads;
     bool closed = false;
-    Callback callback;
+    ProcessFunction processFunction;
+    OutputFunction outputFunction;
 
     long waitingOffset = 0;
     long nalUnitCount = 0;

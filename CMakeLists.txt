@@ -10,16 +10,14 @@ endif()
 
 set(SOURCES
         main.cpp
-        BlockingQueue.h
         Arguments.h
-        Chunk.h
-        Chunk.cpp
-        ChunkReader.h
-        ChunkReader.cpp
-        NalParser.h
-        NalParser.cpp
-        XmlDocument.h
-        XmlDocument.cpp
-        NalUnit.h)
+        Configuration.h Configuration.cpp
+        Chunk.h Chunk.cpp
+        ChunkReader.h ChunkReader.cpp
+        BlockingQueue.h
+        NalUnit.h
+        NalUnitIterator.h NalUnitIterator.cpp
+        NalParser.h NalParser.cpp
+        XmlDocument.h XmlDocument.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})

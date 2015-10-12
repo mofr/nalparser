@@ -9,7 +9,7 @@ void XmlNode::print(std::ostream & stream, int depth) const
     }
 
     stream << name;
-    for(const auto & item : attr)
+    for(const auto & item : attributes)
     {
         stream << " " << item.first << "=" << item.second;
     }
@@ -101,12 +101,14 @@ bool XmlDocument::parseNode(const char * & data, XmlNode & node)
     else
     {
         node.type = XmlNode::Element;
+        skipWhitespaces(data);
+
         if(!parseName(data, node.name))
         {
             return false;
         }
 
-        if(!parseAttributes(data, node.attr))
+        if(!parseAttributes(data, node.attributes))
         {
             return false;
         }
@@ -203,6 +205,7 @@ bool XmlDocument::parseAttributes(const char *& data, std::map<std::string, std:
             return false;
         }
         ++data;
+
         const char * attrValueBegin = data;
         while(*data != quote && *data != 0)
         {

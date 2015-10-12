@@ -1,10 +1,25 @@
 #include "NalParser.h"
+#include "NalUnitIterator.h"
 
-NalParser::NalParser(int threadCount)
+NalParser::NalParser(int threadCount, ProcessFunction processFunction, OutputFunction outputFunction) :
+    processFunction(processFunction),
+    outputFunction(outputFunction)
 {
     for(int i = 0; i < threadCount; ++i)
     {
-        threads.emplace_back(parseChunks, std::ref(*this));
+        threads.emplace_back([this](){
+            NalUnit nalUnit;
+            std::shared_ptr<Chunk> chunk;
+            while(chunkQueue.pop(chunk))
+            {
+                NalUnitIterator nalUnitIterator(chunk);
+                while(nalUnitIterator.next(nalUnit))
+                {
+                    nalUnit.elapsedMillis = this->processFunction(nalUnit);
+                    collect(nalUnit);
+                }
+            }
+        });
     }
 }
 
@@ -14,11 +29,6 @@ NalParser::~NalParser()
     {
         close();
     }
-}
-
-void NalParser::setCallback(Callback callback)
-{
-    this->callback = callback;
 }
 
 void NalParser::parse(std::shared_ptr<Chunk> chunk)
@@ -83,63 +93,7 @@ void NalParser::collect(NalUnit nalUnit)
 
 void NalParser::output(NalUnit nalUnit)
 {
-    callback(nalUnitCount, nalUnit);
+    outputFunction(nalUnitCount, nalUnit);
     waitingOffset = nalUnit.offset + nalUnit.size + StartCodePrefixLength;
     ++nalUnitCount;
-}
-
-void NalParser::parseChunks(NalParser & self)
-{
-    std::shared_ptr<Chunk> chunk;
-    while(self.chunkQueue.pop(chunk))
-    {
-        std::vector<long> startCodePrefixes = chunk->getStartCodePrefixes();
-        if(startCodePrefixes.empty())
-        {
-            continue;
-        }
-
-        for(auto & offset : startCodePrefixes)
-        {
-            offset += chunk->offset;
-        }
-
-        for(std::shared_ptr<Chunk> next = chunk->getNext(); next != nullptr; next = next->getNext())
-        {
-            const std::vector<long> & nextStartCodePrefixes = next->getStartCodePrefixes();
-            if(!nextStartCodePrefixes.empty())
-            {
-                startCodePrefixes.push_back(nextStartCodePrefixes.front() + next->offset);
-                break;
-            }
-        }
-
-        for(int i = 0; i < startCodePrefixes.size() - 1; ++i)
-        {
-            long offset = startCodePrefixes[i];
-            long size = startCodePrefixes[i+1] - offset - StartCodePrefixLength;
-            bool first = chunk->offset == 0 && i == 0;
-            unsigned char firstByte;
-            if(chunk->size > offset-chunk->offset)
-            {
-                firstByte = chunk->data[offset-chunk->offset];
-            }
-            else
-            {
-                std::shared_ptr<Chunk> next = chunk->getNext();
-                if(next)
-                {
-                    firstByte = chunk->getNext()->data[offset - chunk->size - chunk->offset];
-                }
-                else
-                {
-                    break;
-                }
-            }
-            int type = (firstByte & 0x01111110) >> 1;
-            int taskDuration = 10;
-            std::this_thread::sleep_for(std::chrono::milliseconds(taskDuration));
-            self.collect({offset, size, type, first, taskDuration});
-        }
-    }
 }

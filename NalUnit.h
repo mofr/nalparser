@@ -67,13 +67,16 @@ inline const char * nalTypeAsString(int type)
 
 struct NalUnit
 {
-    long offset;
-    long size;
-    int type;
-    bool first;
-    int elapsedMillis;
+    long offset = 0;
+    long size = 0;
+    int type = 0;
+    bool first = false;
+    int elapsedMillis = 0;
 
-    NalUnit(long offset, long size, int type, bool first, int elapsedMillis)
-            : offset(offset), type(type), size(size), first(first), elapsedMillis(elapsedMillis)
+    NalUnit()
+    { }
+
+    NalUnit(long offset, long size, int type, bool first)
+            : offset(offset), type(type), size(size), first(first)
     { }
 };

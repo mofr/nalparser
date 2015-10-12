@@ -12,10 +12,10 @@ struct XmlNode
         Element
     };
 
-    std::string name;
-    std::map<std::string, std::string> attr;
-    std::vector<XmlNode> children;
     Type type;
+    std::string name;
+    std::map<std::string, std::string> attributes;
+    std::vector<XmlNode> children;
 
     void print(std::ostream & stream = std::cout, int depth = 0) const;
 };
