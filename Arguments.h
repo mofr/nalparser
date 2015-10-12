@@ -6,13 +6,14 @@
 struct Arguments
 {
     const char * filename;
-    int threadCount;
+    int threadCount = std::thread::hardware_concurrency();
+    const char * configFilename = "config.xml";
 
     Arguments(int argc, char ** argv)
     {
         if(argc < 2)
         {
-            std::cerr << "Usage: executable FILENAME [THREADS]" << std::endl;
+            std::cerr << "Usage: executable FILENAME [THREADS] [CONFIG_FILENAME]" << std::endl;
             std::exit(1);
         }
 
@@ -27,9 +28,10 @@ struct Arguments
                 std::exit(1);
             }
         }
-        else
+
+        if(argc > 3)
         {
-            threadCount = std::thread::hardware_concurrency();
+            configFilename = argv[3];
         }
     }
 };
