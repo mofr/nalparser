@@ -31,6 +31,7 @@ static const char* nalTypes[] = {
         "RSV_VCL24",
         "RSV_VCL25",
         "RSV_VCL26",
+        "RSV_VCL27",
         "RSV_VCL28",
         "RSV_VCL29",
         "RSV_VCL30",

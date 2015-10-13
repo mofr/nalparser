@@ -54,7 +54,7 @@ bool NalUnitIterator::next(NalUnit &nalUnit)
 
     nalUnit.offset = offset;
     nalUnit.size = size;
-    nalUnit.type = (firstByte & 0x01111110) >> 1;
+    nalUnit.type = (firstByte & 0b01111110) >> 1;
     nalUnit.first = chunk->offset == 0 && i == 0;
 
     ++i;

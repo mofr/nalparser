@@ -3,6 +3,7 @@
 #include "ChunkReader.h"
 #include "NalParser.h"
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 
 int main(int argc, char ** argv)
@@ -26,9 +27,10 @@ int main(int argc, char ** argv)
     };
 
     auto outputFunction = [](int index, const NalUnit & nalUnit){
-        std::cout << index << ": " << nalTypeAsString(nalUnit.type);
-        std::cout << " offset=" << nalUnit.offset;
-        std::cout << " size=" << nalUnit.size;
+        std::cout << std::setw(5) << std::setfill('0') << index << ": ";
+        std::cout << std::setbase(16) << "0x" << std::setw(8) << nalUnit.offset;
+        std::cout << " " << nalTypeAsString(nalUnit.type) << "(" << std::setbase(10) << nalUnit.type << ")";
+        std::cout << " size=" << std::setbase(10) << nalUnit.size;
         std::cout << " " << nalUnit.elapsedMillis << " ms";
         std::cout << std::endl;
     };
