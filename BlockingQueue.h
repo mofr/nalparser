@@ -3,7 +3,6 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
-#include <iostream>
 
 template<typename T>
 class BlockingQueue
@@ -23,19 +22,15 @@ public:
     void push(const T & item)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        std::cout << "push to queue " << queue.size() << std::endl;
         pushCondition.wait(lock, [this](){return queue.size() < maxSize || !sizeLimited;});
         queue.push(item);
         popCondition.notify_one();
-        std::cout << "pushed " << queue.size() << std::endl;
     }
 
     bool pop(T & item)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        std::cout << "wait pop condition";
         popCondition.wait(lock, [this](){return !queue.empty() || closed;});
-        std::cout << "pop" << queue.empty() << " " << queue.size() << std::endl;
         if(closed && queue.empty())
         {
             return false;

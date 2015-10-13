@@ -1,5 +1,4 @@
 #include "NalUnitIterator.h"
-#include <iostream>
 
 NalUnitIterator::NalUnitIterator(std::shared_ptr<Chunk> chunk) :
     chunk(chunk)
@@ -27,11 +26,20 @@ NalUnitIterator::NalUnitIterator(std::shared_ptr<Chunk> chunk) :
             break;
         }
     }
+
+    //last chunk
+    if(!chunk->getNext())
+    {
+        //add fake start code prefix to return last nal unit in file
+        Chunk::StartCodePrefix startCodePrefix;
+        startCodePrefix.offset = chunk->size;
+        startCodePrefixes.push_back(startCodePrefix);
+    }
 }
 
 bool NalUnitIterator::next(NalUnit &nalUnit)
 {
-    if(i + 1>= startCodePrefixes.size())
+    if(i + 1 >= startCodePrefixes.size())
     {
         return false;
     }

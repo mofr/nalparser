@@ -1,5 +1,4 @@
 #include "Chunk.h"
-#include "NalUnit.h"
 
 Chunk::Chunk(long size) :
         size(size),
@@ -44,7 +43,7 @@ void Chunk::findStartCodePrefixes()
     unsigned char * begin = data;
     unsigned char * i = data;
     unsigned char * end = data + size;
-    int matchCount = 0;
+    int zeros = 0;
 
     StartCodePrefix scp;
 
@@ -52,7 +51,7 @@ void Chunk::findStartCodePrefixes()
     {
         if(i == end)
         {
-            if(matchCount == 0)
+            if(zeros == 0 || data != begin)
             {
                 return;
             }
@@ -64,36 +63,26 @@ void Chunk::findStartCodePrefixes()
             }
             begin = next->data;
             i = next->data;
-            end = next->data + next->size;
+            end = next->data + std::min(next->size, 2L); // 2 bytes is enough to capture remaining start code prefix part
         }
 
-        if((matchCount == 0 && *i == 0x00) ||
-           (matchCount == 1 && *i == 0x00) ||
-           (matchCount == 2 && *i == 0x00) ||
-           (matchCount == 2 && *i == 0x01) ||
-           (matchCount == 3 && *i == 0x01))
+        if(*i == 0x01 && zeros >= 2)
         {
-            if(matchCount == 0)
-            {
-                scp.offset = i - begin;
-            }
-            ++matchCount;
-
-            if(*i == 0x01)
-            {
-                scp.length = matchCount;
-                startCodePrefixes.push_back(scp);
-                if(data != begin)
-                {
-                    //already in next chunk
-                    return;
-                }
-                matchCount = 0;
-            }
+            if(zeros > 2)
+                scp.length = 4;
+            else
+                scp.length = 3;
+            scp.offset = i - begin - scp.length + 1;
+            startCodePrefixes.push_back(scp);
+            zeros = 0;
+        }
+        else if(*i == 0x00)
+        {
+            ++zeros;
         }
         else
         {
-            matchCount = 0;
+            zeros = 0;
         }
 
         ++i;

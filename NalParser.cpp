@@ -1,5 +1,6 @@
 #include "NalParser.h"
 #include "NalUnitIterator.h"
+#include <iostream>
 
 NalParser::NalParser(int threadCount, ProcessFunction processFunction, OutputFunction outputFunction) :
     processFunction(processFunction),
@@ -29,6 +30,16 @@ NalParser::~NalParser()
     {
         close();
     }
+
+    if(nalUnitList.size() != 0)
+    {
+        std::cerr << "Error: nalUnitList is not empty: " << nalUnitList.size() << std::endl;
+        for(auto i = begin(nalUnitList); i != end(nalUnitList); ++i)
+        {
+            std::cerr << i->offset << std::endl;
+        }
+        std::exit(1);
+    }
 }
 
 void NalParser::parse(std::shared_ptr<Chunk> chunk)
@@ -54,11 +65,9 @@ int NalParser::count() const
     return nalUnitCount;
 }
 
-void NalParser::collect(NalUnit nalUnit)
+void NalParser::collect(const NalUnit & nalUnit)
 {
     std::unique_lock<std::mutex> lock(mutex);
-
-    collectedCount++;
 
     if(waitingOffset == nalUnit.offset || nalUnit.first)
     {
@@ -76,23 +85,24 @@ void NalParser::collect(NalUnit nalUnit)
     else
     {
         //insert into nalUnitList, keeping sorted by nalUnit.offset
-        auto iter = begin(nalUnitList);
-        for(; iter != end(nalUnitList); ++iter)
+        bool inserted = false;
+        for(auto iter = begin(nalUnitList); iter != end(nalUnitList); ++iter)
         {
             if(iter->offset > nalUnit.offset)
             {
                 nalUnitList.insert(iter, nalUnit);
+                inserted = true;
                 break;
             }
         }
-        if(iter == end(nalUnitList))
+        if(!inserted)
         {
             nalUnitList.push_back(nalUnit);
         }
     }
 }
 
-void NalParser::output(NalUnit nalUnit)
+void NalParser::output(const NalUnit & nalUnit)
 {
     outputFunction(nalUnitCount, nalUnit);
     waitingOffset = nalUnit.offset + nalUnit.size;

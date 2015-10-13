@@ -22,8 +22,8 @@ public:
     int count() const;
 
 private:
-    void collect(NalUnit nalUnit);
-    void output(NalUnit nalUnit);
+    void collect(const NalUnit & nalUnit);
+    void output(const NalUnit & nalUnit);
 
 private:
     BlockingQueue<std::shared_ptr<Chunk>> chunkQueue{100};
@@ -34,7 +34,6 @@ private:
 
     long waitingOffset = 0;
     long nalUnitCount = 0;
-    long collectedCount = 0;
     std::list<NalUnit> nalUnitList;
     mutable std::mutex mutex;
 };
