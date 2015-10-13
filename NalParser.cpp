@@ -75,6 +75,7 @@ void NalParser::collect(NalUnit nalUnit)
     }
     else
     {
+        //insert into nalUnitList, keeping sorted by nalUnit.offset
         auto iter = begin(nalUnitList);
         for(; iter != end(nalUnitList); ++iter)
         {
@@ -94,6 +95,6 @@ void NalParser::collect(NalUnit nalUnit)
 void NalParser::output(NalUnit nalUnit)
 {
     outputFunction(nalUnitCount, nalUnit);
-    waitingOffset = nalUnit.offset + nalUnit.size + StartCodePrefixLength;
+    waitingOffset = nalUnit.offset + nalUnit.size;
     ++nalUnitCount;
 }

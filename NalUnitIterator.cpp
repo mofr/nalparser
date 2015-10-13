@@ -1,25 +1,29 @@
 #include "NalUnitIterator.h"
+#include <iostream>
 
 NalUnitIterator::NalUnitIterator(std::shared_ptr<Chunk> chunk) :
     chunk(chunk)
 {
     startCodePrefixes = chunk->getStartCodePrefixes();
+
     if(startCodePrefixes.empty())
     {
         return;
     }
 
-    for(auto & offset : startCodePrefixes)
+    for(auto & startCodePrefix : startCodePrefixes)
     {
-        offset += chunk->offset;
+        startCodePrefix.offset += chunk->offset;
     }
 
     for(std::shared_ptr<Chunk> next = chunk->getNext(); next != nullptr; next = next->getNext())
     {
-        const std::vector<long> & nextStartCodePrefixes = next->getStartCodePrefixes();
+        const std::vector<Chunk::StartCodePrefix> & nextStartCodePrefixes = next->getStartCodePrefixes();
         if(!nextStartCodePrefixes.empty())
         {
-            startCodePrefixes.push_back(nextStartCodePrefixes.front() + next->offset);
+            Chunk::StartCodePrefix startCodePrefix = nextStartCodePrefixes.front();
+            startCodePrefix.offset += next->offset;
+            startCodePrefixes.push_back(startCodePrefix);
             break;
         }
     }
@@ -27,24 +31,25 @@ NalUnitIterator::NalUnitIterator(std::shared_ptr<Chunk> chunk) :
 
 bool NalUnitIterator::next(NalUnit &nalUnit)
 {
-    if(i + 1 >= startCodePrefixes.size())
+    if(i + 1>= startCodePrefixes.size())
     {
         return false;
     }
 
-    long offset = startCodePrefixes[i];
-    long size = startCodePrefixes[i + 1] - offset - StartCodePrefixLength;
+    int startCodePrefixLength = startCodePrefixes[i].length;
+    long offset = startCodePrefixes[i].offset;
+    long size = startCodePrefixes[i + 1].offset - offset;
     unsigned char firstByte;
-    if (chunk->size > offset - chunk->offset)
+    if (chunk->size > offset - chunk->offset + startCodePrefixLength)
     {
-        firstByte = chunk->data[offset - chunk->offset];
+        firstByte = chunk->data[offset - chunk->offset + startCodePrefixLength];
     }
     else
     {
         std::shared_ptr<Chunk> next = chunk->getNext();
         if (next)
         {
-            firstByte = chunk->getNext()->data[offset - chunk->size - chunk->offset];
+            firstByte = chunk->getNext()->data[offset - chunk->size - chunk->offset + startCodePrefixLength];
         }
         else
         {

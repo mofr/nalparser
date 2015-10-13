@@ -14,10 +14,18 @@ struct Chunk
     Chunk(long size);
     ~Chunk();
 
+    struct StartCodePrefix
+    {
+        long offset = 0;
+        int length = 0; // 3 or 4
+
+        StartCodePrefix() {}
+    };
+
     void setNext(std::shared_ptr<Chunk> next);
     std::shared_ptr<Chunk> getNext() const;
 
-    const std::vector<long> & getStartCodePrefixes();
+    const std::vector<StartCodePrefix> & getStartCodePrefixes();
 
 private:
     void findStartCodePrefixes();
@@ -25,7 +33,7 @@ private:
 private:
     std::mutex mutex;
     bool parsed = false;
-    std::vector<long> startCodePrefixes;
+    std::vector<StartCodePrefix> startCodePrefixes;
 
     mutable std::mutex nextMutex;
     mutable std::condition_variable nextCondition;

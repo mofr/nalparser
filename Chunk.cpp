@@ -27,7 +27,7 @@ std::shared_ptr<Chunk> Chunk::getNext() const
     return next;
 }
 
-const std::vector<long> &Chunk::getStartCodePrefixes()
+const std::vector<Chunk::StartCodePrefix> &Chunk::getStartCodePrefixes()
 {
     std::unique_lock<std::mutex> lock(mutex);
     if(!parsed)
@@ -39,27 +39,63 @@ const std::vector<long> &Chunk::getStartCodePrefixes()
     return startCodePrefixes;
 }
 
-// @todo find splitted prefixes
 void Chunk::findStartCodePrefixes()
 {
+    unsigned char * begin = data;
+    unsigned char * i = data;
+    unsigned char * end = data + size;
     int matchCount = 0;
-    for(long i = 0; i < size; ++i)
+
+    StartCodePrefix scp;
+
+    while(true)
     {
-        if(matchCount < StartCodePrefixLength)
+        if(i == end)
         {
-            if(data[i] == StartCodePrefix[matchCount])
+            if(matchCount == 0)
             {
-                ++matchCount;
+                return;
             }
-            else
+            std::shared_ptr<Chunk> next = getNext();
+            if(!next)
             {
+                //end of file reached
+                return;
+            }
+            begin = next->data;
+            i = next->data;
+            end = next->data + next->size;
+        }
+
+        if((matchCount == 0 && *i == 0x00) ||
+           (matchCount == 1 && *i == 0x00) ||
+           (matchCount == 2 && *i == 0x00) ||
+           (matchCount == 2 && *i == 0x01) ||
+           (matchCount == 3 && *i == 0x01))
+        {
+            if(matchCount == 0)
+            {
+                scp.offset = i - begin;
+            }
+            ++matchCount;
+
+            if(*i == 0x01)
+            {
+                scp.length = matchCount;
+                startCodePrefixes.push_back(scp);
+                if(data != begin)
+                {
+                    //already in next chunk
+                    return;
+                }
                 matchCount = 0;
             }
         }
         else
         {
-            startCodePrefixes.push_back(i);
             matchCount = 0;
         }
+
+        ++i;
     }
 }

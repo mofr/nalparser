@@ -21,6 +21,7 @@ int main(int argc, char ** argv)
     std::cout << "Thread count: " << args.threadCount << std::endl;
 
     auto processFunction = [&configuration](const NalUnit & nalUnit){
+        return 0;
         int millis = configuration.getRandomSleepTime(nalUnit.type);
         std::this_thread::sleep_for(std::chrono::milliseconds(millis));
         return millis;

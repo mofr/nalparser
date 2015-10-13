@@ -12,7 +12,7 @@ public:
 
 private:
     std::shared_ptr<Chunk> chunk;
-    std::vector<long> startCodePrefixes;
+    std::vector<Chunk::StartCodePrefix> startCodePrefixes;
     int i = 0;
 };
 
