@@ -6,7 +6,7 @@
 	<!-- Maximum chunk queue length-->
 	<queue_length value="100" />
 
-	<!-- Sleep time in milliseconds -->
+	<!-- Sleep time in milliseconds. Remove following lines to remove all sleep calls. -->
 	<task nal_unit_type="0" min_sleep="10" max_sleep="20" />
 	<task nal_unit_type="1" min_sleep="10" max_sleep="20" />
 	<task nal_unit_type="2" min_sleep="10" max_sleep="20" />
