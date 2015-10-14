@@ -8,7 +8,14 @@ public:
     ChunkReader(int chunkSize);
     ~ChunkReader();
 
+    /*
+     * @return true on success, false on error
+     */
     bool open(const char * filename);
+
+    /*
+     * @return next chunk, nullptr if end of file reached
+     */
     std::shared_ptr<Chunk> readNext();
 
 private:

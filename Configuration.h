@@ -32,6 +32,6 @@ public:
 
 private:
     std::vector<SleepRange> sleepRanges;
-    int chunkSize = 128*1024;
-    int queueLength = 100;
+    int chunkSize;
+    int queueLength;
 };

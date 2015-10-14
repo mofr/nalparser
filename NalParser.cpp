@@ -1,12 +1,13 @@
 #include "NalParser.h"
 #include "NalUnitIterator.h"
 #include <iostream>
+#include <chrono>
 
 NalParser::NalParser(int threadCount,
-                     int queueLength,
+                     int maxQueueLength,
                      ProcessFunction processFunction,
                      OutputFunction outputFunction) :
-    chunkQueue(queueLength),
+    chunkQueue(maxQueueLength),
     processFunction(processFunction),
     outputFunction(outputFunction)
 {
@@ -20,8 +21,7 @@ NalParser::NalParser(int threadCount,
                 NalUnitIterator nalUnitIterator(chunk);
                 while(nalUnitIterator.getNext(nalUnit))
                 {
-                    nalUnit.elapsedMillis = this->processFunction(nalUnit);
-                    collect(nalUnit);
+                    process(nalUnit);
                 }
             }
         });
@@ -67,6 +67,14 @@ int NalParser::count() const
 {
     std::unique_lock<std::mutex> lock(mutex);
     return nalUnitCount;
+}
+
+void NalParser::process(NalUnit & nalUnit)
+{
+    auto start = std::chrono::system_clock::now();
+    processFunction(nalUnit);
+    nalUnit.elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+    collect(nalUnit);
 }
 
 void NalParser::collect(const NalUnit & nalUnit)

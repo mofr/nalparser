@@ -25,9 +25,19 @@ class XmlDocument
 public:
     XmlDocument() { }
 
+    /*
+     * @return true on success, false on error
+     * @see getLastError
+     */
     bool load(const char * filename);
+
+    /*
+     * @param data zero-terminated entire xml document contents.
+     */
     bool parse(const char * data);
+
     const char * getLastError() const;
+
     void print(std::ostream & stream = std::cout) const;
 
     const XmlNode & getRoot() const;

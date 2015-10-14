@@ -5,6 +5,11 @@
 #include <vector>
 #include <memory>
 
+/*
+ * @brief Chunk is a binary chunk of file.
+ * @param offset offset in bytes from file beginning
+ * @param size size in bytes
+ */
 struct Chunk
 {
     long offset = 0;
@@ -14,6 +19,9 @@ struct Chunk
     Chunk(long size);
     ~Chunk();
 
+    /*
+     * @param offset offset within chunk
+     */
     struct StartCodePrefix
     {
         long offset = 0;
@@ -22,9 +30,16 @@ struct Chunk
         StartCodePrefix() {}
     };
 
-    void setNext(std::shared_ptr<Chunk> next);
+    /*
+     * @return Next chunk in file, blocks and wait if next is not available (setNext). Returns null poitner if end of file reached.
+     */
     std::shared_ptr<Chunk> getNext() const;
 
+    void setNext(std::shared_ptr<Chunk> next);
+
+    /*
+     * @return start code prefixes starts in chunk
+     */
     const std::vector<StartCodePrefix> & getStartCodePrefixes();
 
 private:

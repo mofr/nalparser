@@ -4,18 +4,20 @@
 #include <cstdlib>
 #include <ctime>
 
-Configuration::Configuration(const char * filename)
+Configuration::Configuration(const char * filename) :
+    chunkSize(128 * 1000),
+    queueLength(100)
 {
-    std::srand(std::time(0));
-
     XmlDocument configFile;
     if(!configFile.load(filename))
     {
         std::cerr << "Can't load config file '" << filename << "': " << configFile.getLastError() << std::endl;
-        std::exit(1);
+        std::cout << "Using default config: zero sleeps, 128 KB chunk, 100 queue length" << std::endl;
+        return;
     }
 
-    sleepRanges.resize(64);
+    std::srand(std::time(0));
+    sleepRanges.resize(64, {0,0});
 
     for(auto &item : configFile.getRoot().children)
     {

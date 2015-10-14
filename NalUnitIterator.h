@@ -8,6 +8,9 @@ class NalUnitIterator
 public:
     NalUnitIterator(std::shared_ptr<Chunk> chunk);
 
+    /*
+     * @return true on success, false if end of file reached
+     */
     bool getNext(NalUnit &nalUnit);
 
 private:
