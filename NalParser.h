@@ -28,12 +28,13 @@ public:
     ~NalParser();
 
     /*
-     * Push chunk in queue. Will block and wait if queue length greater then maxQueueLength
+     * Push chunk in queue. Will block and wait if queue length greater then maxQueueLength.
+     * For each NAL unit found ProcessFunction will be called, and then OutputFunction.
      */
     void parse(std::shared_ptr<Chunk> chunk);
 
     /*
-     * Wait until no input chunks remained.
+     * Wait until no input chunks remained, then stop working threads.
      */
     void close();
 
