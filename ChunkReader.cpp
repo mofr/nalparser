@@ -1,5 +1,10 @@
 #include "ChunkReader.h"
 
+ChunkReader::ChunkReader(int chunkSize) :
+    chunkSize(chunkSize)
+{
+}
+
 ChunkReader::~ChunkReader()
 {
     if(file)
@@ -32,8 +37,8 @@ std::shared_ptr<Chunk> ChunkReader::readChunk()
         return nullptr;
     }
 
-    std::shared_ptr<Chunk> chunk(new Chunk(ChunkSize));
-    chunk->size = fread(chunk->data, 1, ChunkSize, file);
+    std::shared_ptr<Chunk> chunk(new Chunk(chunkSize));
+    chunk->size = fread(chunk->data, 1, chunkSize, file);
     chunk->offset = offset;
     offset += chunk->size;
     return chunk;

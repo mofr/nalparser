@@ -16,9 +16,22 @@ public:
 
     Configuration(const char * filename);
 
-    SleepRange * getSleepRange(int nalUnitType);
-    int getRandomSleepTime(int nalUnitType);
+    const SleepRange * getSleepRange(int nalUnitType) const;
+
+    /*
+     * @return random sleep time in milliseconds, 0 if not configured
+     */
+    int getRandomSleepTime(int nalUnitType) const;
+
+    /*
+     * @return chunk size in bytes
+     */
+    int getChunkSize() const;
+
+    int getQueueLength() const;
 
 private:
     std::vector<SleepRange> sleepRanges;
+    int chunkSize = 128*1024;
+    int queueLength = 100;
 };

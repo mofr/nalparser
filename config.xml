@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<tasks>
+<config>
+	<!-- Chunk size in Kilobytes-->
+	<chunk_size value="128" />
+
+	<!-- Maximum chunk queue length-->
+	<queue_length value="100" />
+
 	<!-- Sleep time in milliseconds -->
 	<task nal_unit_type="0" min_sleep="10" max_sleep="20" />
 	<task nal_unit_type="1" min_sleep="10" max_sleep="20" />
@@ -54,4 +60,4 @@
 	<task nal_unit_type="46" min_sleep="10" max_sleep="20" />
 	<task nal_unit_type="47" min_sleep="10" max_sleep="20" />
 	<task nal_unit_type="48" min_sleep="10" max_sleep="20" />
-</tasks>
+</config>

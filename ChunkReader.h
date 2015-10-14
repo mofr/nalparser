@@ -5,7 +5,7 @@
 class ChunkReader
 {
 public:
-    ChunkReader() {}
+    ChunkReader(int chunkSize);
     ~ChunkReader();
 
     bool open(const char * filename);
@@ -19,5 +19,5 @@ private:
     long offset = 0;
     std::shared_ptr<Chunk> previous;
 
-    static const int ChunkSize = 128*1024;
+    int chunkSize;
 };

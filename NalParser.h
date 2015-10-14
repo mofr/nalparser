@@ -14,7 +14,10 @@ public:
     typedef std::function<int(const NalUnit & nalUnit)> ProcessFunction;
     typedef std::function<void(int index, const NalUnit & nalUnit)> OutputFunction;
 
-    NalParser(int threadCount, ProcessFunction processFunction, OutputFunction outputFunction);
+    NalParser(int threadCount,
+              int queueLength,
+              ProcessFunction processFunction,
+              OutputFunction outputFunction);
     ~NalParser();
 
     void parse(std::shared_ptr<Chunk> chunk);
@@ -26,7 +29,7 @@ private:
     void output(const NalUnit & nalUnit);
 
 private:
-    BlockingQueue<std::shared_ptr<Chunk>> chunkQueue{100};
+    BlockingQueue<std::shared_ptr<Chunk>> chunkQueue;
     std::vector<std::thread> threads;
     bool closed = false;
     ProcessFunction processFunction;

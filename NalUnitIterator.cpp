@@ -1,52 +1,49 @@
 #include "NalUnitIterator.h"
 
 NalUnitIterator::NalUnitIterator(std::shared_ptr<Chunk> chunk) :
-    chunk(chunk)
+    chunk(chunk),
+    startCodePrefixes(chunk->getStartCodePrefixes())
 {
-    startCodePrefixes = chunk->getStartCodePrefixes();
+    i = begin(startCodePrefixes);
 
-    if(startCodePrefixes.empty())
+    std::shared_ptr<Chunk> prev = chunk;
+    std::shared_ptr<Chunk> next = prev->getNext();
+    for(; next; next = next->getNext())
     {
-        return;
-    }
-
-    for(auto & startCodePrefix : startCodePrefixes)
-    {
-        startCodePrefix.offset += chunk->offset;
-    }
-
-    for(std::shared_ptr<Chunk> next = chunk->getNext(); next != nullptr; next = next->getNext())
-    {
-        const std::vector<Chunk::StartCodePrefix> & nextStartCodePrefixes = next->getStartCodePrefixes();
-        if(!nextStartCodePrefixes.empty())
+        if(!next->getStartCodePrefixes().empty())
         {
-            Chunk::StartCodePrefix startCodePrefix = nextStartCodePrefixes.front();
-            startCodePrefix.offset += next->offset;
-            startCodePrefixes.push_back(startCodePrefix);
+            lastOffset = next->offset + next->getStartCodePrefixes().front().offset;
             break;
         }
+        prev = next;
     }
 
-    //last chunk
-    if(!chunk->getNext())
+    if(!next)
     {
-        //add fake start code prefix to return last nal unit in file
-        Chunk::StartCodePrefix startCodePrefix;
-        startCodePrefix.offset = chunk->size;
-        startCodePrefixes.push_back(startCodePrefix);
+        lastOffset = prev->offset + prev->size;
     }
 }
 
-bool NalUnitIterator::next(NalUnit &nalUnit)
+bool NalUnitIterator::getNext(NalUnit &nalUnit)
 {
-    if(i + 1 >= startCodePrefixes.size())
+    if(i == end(startCodePrefixes))
     {
         return false;
     }
 
-    int startCodePrefixLength = startCodePrefixes[i].length;
-    long offset = startCodePrefixes[i].offset;
-    long size = startCodePrefixes[i + 1].offset - offset;
+    long nextOffset;
+    if(i + 1 == end(startCodePrefixes))
+    {
+        nextOffset = lastOffset;
+    }
+    else
+    {
+        nextOffset = (i+1)->offset + chunk->offset;
+    }
+
+    long offset = i->offset + chunk->offset;
+    long size = nextOffset - offset;
+    int startCodePrefixLength = i->length;
     unsigned char firstByte;
     if (chunk->size > offset - chunk->offset + startCodePrefixLength)
     {
@@ -54,10 +51,10 @@ bool NalUnitIterator::next(NalUnit &nalUnit)
     }
     else
     {
-        std::shared_ptr<Chunk> next = chunk->getNext();
-        if (next)
+        std::shared_ptr<Chunk> nextChunk = chunk->getNext();
+        if (nextChunk)
         {
-            firstByte = chunk->getNext()->data[offset - chunk->size - chunk->offset + startCodePrefixLength];
+            firstByte = nextChunk->data[offset - chunk->size - chunk->offset + startCodePrefixLength];
         }
         else
         {
@@ -68,7 +65,7 @@ bool NalUnitIterator::next(NalUnit &nalUnit)
     nalUnit.offset = offset;
     nalUnit.size = size;
     nalUnit.type = (firstByte & 0b01111110) >> 1;
-    nalUnit.first = chunk->offset == 0 && i == 0;
+    nalUnit.first = chunk->offset == 0 && i == begin(startCodePrefixes);
 
     ++i;
     return true;

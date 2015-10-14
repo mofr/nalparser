@@ -17,47 +17,65 @@ Configuration::Configuration(const char * filename)
 
     sleepRanges.resize(64);
 
-    for(auto & task : configFile.getRoot().children)
+    for(auto &item : configFile.getRoot().children)
     {
-        if(task.name != "task")
+        if(item.name == "queue_length")
         {
-            continue;
+            auto valueAttribute = item.attributes.find("value");
+            if(valueAttribute == item.attributes.end())
+            {
+                std::cerr << "Missing queue_length value attribute" << std::endl;
+                std::exit(1);
+            }
+            queueLength = std::stoi(valueAttribute->second);
         }
+        else if(item.name == "chunk_size")
+        {
+            auto valueAttribute = item.attributes.find("value");
+            if(valueAttribute == item.attributes.end())
+            {
+                std::cerr << "Missing chunk_size value attribute" << std::endl;
+                std::exit(1);
+            }
+            chunkSize = std::stoi(valueAttribute->second) * 1024; // kilobytes
+        }
+        else if(item.name == "task")
+        {
+            auto typeAttribute = item.attributes.find("nal_unit_type");
+            if(typeAttribute == item.attributes.end())
+            {
+                std::cerr << "Missing nal_unit_type attribute" << std::endl;
+                std::exit(1);
+            }
+            int type = std::stoi(typeAttribute->second);
+            if(type >= sleepRanges.size() || type < 0)
+            {
+                std::cerr << "Invalid nal_unit_type = " << type << std::endl;
+                std::exit(1);
+            }
 
-        auto typeAttribute = task.attributes.find("nal_unit_type");
-        if(typeAttribute == task.attributes.end())
-        {
-            std::cerr << "Missing nal_unit_type attribute" << std::endl;
-            std::exit(1);
-        }
-        int type = std::stoi(typeAttribute->second);
-        if(type >= sleepRanges.size() || type < 0)
-        {
-            std::cerr << "Invalid nal_unit_type = " << type << std::endl;
-            std::exit(1);
-        }
+            auto minAttribute = item.attributes.find("min_sleep");
+            if(minAttribute == item.attributes.end())
+            {
+                std::cerr << "Missing min_sleep attribute" << std::endl;
+                std::exit(1);
+            }
+            int min = std::stoi(minAttribute->second);
 
-        auto minAttribute = task.attributes.find("min_sleep");
-        if(minAttribute == task.attributes.end())
-        {
-            std::cerr << "Missing min_sleep attribute" << std::endl;
-            std::exit(1);
-        }
-        int min = std::stoi(minAttribute->second);
+            auto maxAttribute = item.attributes.find("max_sleep");
+            if(maxAttribute == item.attributes.end())
+            {
+                std::cerr << "Missing max_sleep attribute" << std::endl;
+                std::exit(1);
+            }
+            int max = std::stoi(maxAttribute->second);
 
-        auto maxAttribute = task.attributes.find("max_sleep");
-        if(maxAttribute == task.attributes.end())
-        {
-            std::cerr << "Missing max_sleep attribute" << std::endl;
-            std::exit(1);
+            sleepRanges[type] = {min, max};
         }
-        int max = std::stoi(maxAttribute->second);
-
-        sleepRanges[type] = {min, max};
     }
 }
 
-Configuration::SleepRange * Configuration::getSleepRange(int nalUnitType)
+const Configuration::SleepRange * Configuration::getSleepRange(int nalUnitType) const
 {
     if(nalUnitType < sleepRanges.size())
     {
@@ -69,12 +87,22 @@ Configuration::SleepRange * Configuration::getSleepRange(int nalUnitType)
     }
 }
 
-int Configuration::getRandomSleepTime(int nalUnitType)
+int Configuration::getRandomSleepTime(int nalUnitType) const
 {
-    SleepRange * sleepRange = getSleepRange(nalUnitType);
+    const SleepRange * sleepRange = getSleepRange(nalUnitType);
     if(!sleepRange)
     {
         return 0;
     }
     return std::rand() % (sleepRange->max - sleepRange->min) + sleepRange->min;
+}
+
+int Configuration::getChunkSize() const
+{
+    return chunkSize;
+}
+
+int Configuration::getQueueLength() const
+{
+    return queueLength;
 }

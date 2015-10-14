@@ -11,7 +11,7 @@ int main(int argc, char ** argv)
     Arguments args(argc, argv);
     Configuration configuration(args.configFilename);
 
-    ChunkReader reader;
+    ChunkReader reader(configuration.getChunkSize());
     if(!reader.open(args.filename))
     {
         std::cerr << "Can't open file " << args.filename << std::endl;
@@ -28,6 +28,7 @@ int main(int argc, char ** argv)
     };
 
     auto outputFunction = [](int index, const NalUnit & nalUnit){
+        return;
         std::cout << std::setw(5) << std::setfill('0') << index << ": ";
         std::cout << std::setbase(16) << "0x" << std::setw(8) << nalUnit.offset;
         std::cout << " " << nalTypeAsString(nalUnit.type) << "(" << std::setbase(10) << nalUnit.type << ")";
@@ -38,16 +39,16 @@ int main(int argc, char ** argv)
 
     auto start = std::chrono::system_clock::now();
 
-    NalParser nalParser(args.threadCount, processFunction, outputFunction);
+    NalParser nalParser(args.threadCount, configuration.getQueueLength(), processFunction, outputFunction);
     while(auto chunk = reader.readNext())
     {
         nalParser.parse(chunk);
     }
     nalParser.close();
 
-    std::cout << "NAL unit count: " << nalParser.count() << std::endl;
-
     auto elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+
+    std::cout << "NAL unit count: " << nalParser.count() << std::endl;
     std::cout << "Elapsed: " << elapsedMillis << " ms" << std::endl;
 
     return 0;

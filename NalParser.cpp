@@ -2,7 +2,11 @@
 #include "NalUnitIterator.h"
 #include <iostream>
 
-NalParser::NalParser(int threadCount, ProcessFunction processFunction, OutputFunction outputFunction) :
+NalParser::NalParser(int threadCount,
+                     int queueLength,
+                     ProcessFunction processFunction,
+                     OutputFunction outputFunction) :
+    chunkQueue(queueLength),
     processFunction(processFunction),
     outputFunction(outputFunction)
 {
@@ -14,7 +18,7 @@ NalParser::NalParser(int threadCount, ProcessFunction processFunction, OutputFun
             while(chunkQueue.pop(chunk))
             {
                 NalUnitIterator nalUnitIterator(chunk);
-                while(nalUnitIterator.next(nalUnit))
+                while(nalUnitIterator.getNext(nalUnit))
                 {
                     nalUnit.elapsedMillis = this->processFunction(nalUnit);
                     collect(nalUnit);

@@ -8,11 +8,12 @@ class NalUnitIterator
 public:
     NalUnitIterator(std::shared_ptr<Chunk> chunk);
 
-    bool next(NalUnit & nalUnit);
+    bool getNext(NalUnit &nalUnit);
 
 private:
     std::shared_ptr<Chunk> chunk;
-    std::vector<Chunk::StartCodePrefix> startCodePrefixes;
-    int i = 0;
+    const std::vector<Chunk::StartCodePrefix> & startCodePrefixes;
+    std::vector<Chunk::StartCodePrefix>::const_iterator i;
+    long lastOffset;
 };
 
