@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(nal_parser)
+project(nalparser)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 if( GCC OR MINGW )
     set(CMAKE_CXX_FLAGS "-Wreturn-type -Werror=return-type")

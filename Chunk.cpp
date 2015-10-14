@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include <algorithm>
 
 Chunk::Chunk(long size) :
         size(size),

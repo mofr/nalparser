@@ -1,6 +1,7 @@
 #include "Configuration.h"
 #include "XmlDocument.h"
 #include <iostream>
+#include <string>
 #include <cstdlib>
 #include <ctime>
 

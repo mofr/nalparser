@@ -8,10 +8,10 @@ void XmlNode::print(std::ostream & stream, int depth) const
         stream << "  ";
     }
 
-    stream << name;
+    stream << name.c_str();
     for(const auto & item : attributes)
     {
-        stream << " " << item.first << "=" << item.second;
+        stream << " " << item.first.c_str() << "=" << item.second.c_str();
     }
     stream << std::endl;
     for(const auto & child : children)
