@@ -26,6 +26,8 @@ int main(int argc, char ** argv)
     };
 
     auto outputFunction = [](int index, const NalUnit & nalUnit){
+//        printf("%05d: 0x%08lx %s(%d) size=%ld %d ms\n", index, nalUnit.offset, nalTypeAsString(nalUnit.type), nalUnit.type, nalUnit.size, nalUnit.elapsedMillis);
+//        return;
         std::cout << std::setw(5) << std::setfill('0') << index << ": ";
         std::cout << "0x" << std::setw(8) << std::setbase(16) << nalUnit.offset;
         std::cout << " " << nalTypeAsString(nalUnit.type) << "(" << std::setbase(10) << nalUnit.type << ")";
