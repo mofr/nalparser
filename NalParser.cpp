@@ -38,11 +38,6 @@ NalParser::~NalParser()
     if(nalUnitList.size() != 0)
     {
         std::cerr << "Error: nalUnitList is not empty: " << nalUnitList.size() << std::endl;
-        for(auto i = begin(nalUnitList); i != end(nalUnitList); ++i)
-        {
-            std::cerr << i->offset << std::endl;
-        }
-        std::exit(1);
     }
 }
 

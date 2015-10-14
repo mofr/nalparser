@@ -6,7 +6,7 @@
 #include <ctime>
 
 Configuration::Configuration(const char * filename) :
-    chunkSize(128 * 1000),
+    chunkSize(128 * 1024),
     queueLength(100)
 {
     XmlDocument configFile;
@@ -94,6 +94,10 @@ int Configuration::getRandomSleepTime(int nalUnitType) const
 {
     const SleepRange * sleepRange = getSleepRange(nalUnitType);
     if(!sleepRange)
+    {
+        return 0;
+    }
+    if(sleepRange->min >= sleepRange->max)
     {
         return 0;
     }
