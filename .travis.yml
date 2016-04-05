@@ -1,27 +1,21 @@
 language: cpp
-
 sudo: required
 dist: trusty
-
 addons:
   apt:
     sources:
-    # add PPAs with more up-to-date toolchains
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.6
     packages:
-    # install toolchains
     - gcc-5
     - g++-5
-
 script:
-  - cmake .
-  - cmake --build .
-
+- cmake .
+- cmake --build .
 deploy:
   provider: releases
-  api_key: "4cb33ab92b85058ad126ebb1b237f24d080b3e73"
-  file: "nalparser"
-  skip_cleanup: true
+  api_key:
+    secure: BauqnTFmQ0gQ8xHiesTGRASX5TEV+MININ2QhrtAJKm4xeWFfjI8HhZX2/MCTfON/hG3O4A03CyP5w+1a9Clg8mADwZ5BPPH40zJp0ovmVjo184ePHUTkE/aKtxqZWIPZYddA5FS9lZBqciFH8ZXiDTj+Hh8ril+5wax112GSiuQkRwaFh9XsHP7H2N9h/cNu35nv5qMyhtGQOFzOtBd1uSa1aOKThoie4z8Cnc62b5oSUYEazXC35o0FhP47qeqBu041GWCW1h/GU3BsvM5AhKPWfTSEX0olkBqo1Rjpa/qEcXrrfCEMG/c8WC2z4UVFDRJQ+9YZINcdRwBwN+Cha3rZmUafoEZyZMVGW1aJXqS+KrQlKAEu2k4/8z6XlGxEEPAqMen+Im+GRwCkubgy2+22wnHal6ag0ycVMCqeS3QuIQ+hxHBF/IrIoeK9WbVhPCY46Gg9CrscgMA3ZTkTodEdEIU/XNq9WDC0QLTWwdo6+F5mGrTCq39CHQWSOy/7EiIsC9JEH3IWjIGAcRsoEJmvjMjj8SUe4T2ln+cm9vvIIOQmO54ZHlAuq8gi6r+GkzL9M7lIjy+d6kAT9/PZf2R9C4E2/s7NXIsqWQyiHFCRqrAcAFShkkZJWldkJdRY/WRofzbRFtFosTmFPVoVpbjU1CNCdMQu1MtSaYaY0Y=
+  file: nalparser
   on:
-    tags: true
+    repo: mofr/nalparser
