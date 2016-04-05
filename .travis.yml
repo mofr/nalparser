@@ -1,14 +1,21 @@
 language: cpp
-sudo: required
-dist: trusty
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    - llvm-toolchain-precise-3.6
-    packages:
-    - gcc-5
-    - g++-5
+os:
+- linux
+- windows
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-precise-3.6
+          packages:
+          - gcc-5
+          - g++-5
+    - os: windows
 script:
 - cmake .
 - cmake --build .
