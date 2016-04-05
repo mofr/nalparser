@@ -17,3 +17,11 @@ addons:
 script:
   - cmake .
   - cmake --build .
+
+deploy:
+  provider: releases
+  api_key: "4cb33ab92b85058ad126ebb1b237f24d080b3e73"
+  file: "nalparser"
+  skip_cleanup: true
+  on:
+    tags: true
