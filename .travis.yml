@@ -1,7 +1,5 @@
 language: cpp
-compiler: 
-  - gcc
-  - clang
 
 script:
-  - cmake --build
+  - cmake .
+  - cmake --build .
