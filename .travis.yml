@@ -1,7 +1,6 @@
 language: cpp
 os:
 - linux
-- windows
 matrix:
   include:
     - os: linux
@@ -13,9 +12,7 @@ matrix:
           - ubuntu-toolchain-r-test
           - llvm-toolchain-precise-3.6
           packages:
-          - gcc-5
           - g++-5
-    - os: windows
 script:
 - cmake .
 - cmake --build .
